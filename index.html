@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ChurnIQ — Customer Churn Predictor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:       #0a0f1e;
+    --surface:  #111827;
+    --card:     #1a2235;
+    --border:   #1f2d45;
+    --accent:   #3b82f6;
+    --accent2:  #06b6d4;
+    --green:    #10b981;
+    --red:      #ef4444;
+    --yellow:   #f59e0b;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --serif:    'DM Serif Display', serif;
+    --sans:     'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Background mesh ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 10%, rgba(59,130,246,.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(6,182,212,.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* ── Nav ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 2.5rem;
+    background: rgba(10,15,30,.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { font-family: var(--serif); font-size: 1.5rem; color: var(--accent2); }
+  .logo span { color: var(--accent); }
+  .badge {
+    background: rgba(59,130,246,.15);
+    border: 1px solid rgba(59,130,246,.3);
+    color: var(--accent);
+    padding: .25rem .75rem;
+    border-radius: 99px;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    position: relative; z-index: 1;
+    text-align: center;
+    padding: 5rem 2rem 3rem;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(6,182,212,.1);
+    border: 1px solid rgba(6,182,212,.25);
+    color: var(--accent2);
+    padding: .3rem 1rem;
+    border-radius: 99px;
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    line-height: 1.15;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #e2e8f0 30%, var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p {
+    color: var(--muted); font-size: 1.05rem;
+    max-width: 520px; margin: 0 auto 2.5rem; line-height: 1.7;
+  }
+
+  /* ── Stats row ── */
+  .stats {
+    display: flex; justify-content: center; gap: 2rem;
+    flex-wrap: wrap; margin-bottom: 3.5rem;
+  }
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem 1.75rem;
+    text-align: center;
+    min-width: 130px;
+  }
+  .stat-val {
+    font-family: var(--serif); font-size: 2rem;
+    color: var(--accent2); line-height: 1;
+  }
+  .stat-lbl { font-size: .78rem; color: var(--muted); margin-top: .3rem; text-transform: uppercase; letter-spacing: .06em; }
+
+  /* ── Main grid ── */
+  .main {
+    position: relative; z-index: 1;
+    max-width: 1100px; margin: 0 auto;
+    padding: 0 1.5rem 5rem;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 1.75rem;
+    align-items: start;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+  }
+  .card-title {
+    font-family: var(--serif); font-size: 1.25rem;
+    margin-bottom: 1.5rem; color: var(--text);
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .card-title .icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(59,130,246,.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+  }
+
+  /* ── Form grid ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.1rem;
+  }
+  .field { display: flex; flex-direction: column; gap: .45rem; }
+  .field.full { grid-column: 1 / -1; }
+  label { font-size: .8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  input, select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    padding: .7rem 1rem;
+    font-family: var(--sans); font-size: .95rem;
+    outline: none;
+    transition: border .2s, box-shadow .2s;
+    width: 100%;
+  }
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+  }
+  select option { background: var(--surface); }
+
+  /* ── Range input ── */
+  .range-wrap { display: flex; flex-direction: column; gap: .45rem; }
+  .range-top { display: flex; justify-content: space-between; align-items: center; }
+  .range-val {
+    background: rgba(59,130,246,.15);
+    color: var(--accent);
+    font-weight: 700; font-size: .88rem;
+    padding: .15rem .6rem; border-radius: 6px;
+  }
+  input[type=range] {
+    -webkit-appearance: none; padding: 0;
+    height: 6px; border-radius: 99px;
+    background: var(--border);
+    border: none; box-shadow: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59,130,246,.25);
+    cursor: pointer;
+  }
+
+  /* ── Submit btn ── */
+  .btn {
+    width: 100%; padding: .9rem;
+    border: none; border-radius: 12px; cursor: pointer;
+    font-family: var(--sans); font-size: 1rem; font-weight: 600;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    letter-spacing: .02em;
+    transition: opacity .2s, transform .1s;
+    margin-top: 1.25rem;
+  }
+  .btn:hover { opacity: .9; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+  /* ── Result panel ── */
+  #result { display: none; }
+  .result-ring {
+    width: 140px; height: 140px;
+    margin: 0 auto 1.5rem;
+    position: relative;
+  }
+  .result-ring svg { transform: rotate(-90deg); }
+  .ring-track { fill: none; stroke: var(--border); stroke-width: 10; }
+  .ring-fill {
+    fill: none; stroke-width: 10;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s cubic-bezier(.4,0,.2,1), stroke .4s;
+  }
+  .ring-label {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .ring-pct { font-family: var(--serif); font-size: 2rem; line-height: 1; }
+  .ring-sub { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+  .verdict {
+    text-align: center; margin-bottom: 1.5rem;
+    padding: 1rem;
+    border-radius: 14px;
+    font-size: 1.1rem; font-weight: 600;
+  }
+  .verdict.churn { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.25); color: var(--red); }
+  .verdict.stay  { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.25); color: var(--green); }
+
+  /* ── Feature bars ── */
+  .feat-title { font-size: .8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 1rem; }
+  .feat-bar { margin-bottom: .85rem; }
+  .feat-row { display: flex; justify-content: space-between; margin-bottom: .3rem; font-size: .82rem; }
+  .feat-name { color: var(--text); }
+  .feat-pct  { color: var(--muted); }
+  .bar-track { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 1s cubic-bezier(.4,0,.2,1); }
+
+  /* ── Risk badge ── */
+  .risk-wrap { display: flex; justify-content: center; margin-bottom: 1.5rem; }
+  .risk-badge {
+    padding: .4rem 1.2rem; border-radius: 99px;
+    font-size: .85rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  }
+  .risk-High   { background: rgba(239,68,68,.15); color: var(--red);    border: 1px solid rgba(239,68,68,.3); }
+  .risk-Medium { background: rgba(245,158,11,.15); color: var(--yellow); border: 1px solid rgba(245,158,11,.3); }
+  .risk-Low    { background: rgba(16,185,129,.15); color: var(--green);  border: 1px solid rgba(16,185,129,.3); }
+
+  /* ── Loader ── */
+  .loader { display: none; text-align: center; padding: 2rem; color: var(--muted); }
+  .spinner {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    animation: spin .7s linear infinite;
+    margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Footer ── */
+  footer {
+    position: relative; z-index: 1;
+    text-align: center; padding: 2rem;
+    color: var(--muted); font-size: .82rem;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 768px) {
+    .main { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    nav { padding: 1rem 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="logo">Churn<span>IQ</span></div>
+  <div class="badge">Model Accuracy: {{ accuracy }}%</div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-tag">🤖 ML + Explainable AI</div>
+  <h1>Predict Customer Churn<br/>Before It Happens</h1>
+  <p>Enter customer details below and get an instant AI-powered churn prediction with risk analysis and feature insights.</p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-val">{{ accuracy }}%</div>
+      <div class="stat-lbl">Accuracy</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">500</div>
+      <div class="stat-lbl">Trained On</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">7</div>
+      <div class="stat-lbl">Features</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">100</div>
+      <div class="stat-lbl">Trees</div>
+    </div>
+  </div>
+</section>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Input Form -->
+  <div class="card">
+    <div class="card-title">
+      <div class="icon">📋</div>
+      Customer Details
+    </div>
+
+    <form id="churnForm">
+      <div class="form-grid">
+
+        <!-- Age -->
+        <div class="field">
+          <div class="range-wrap">
+            <div class="range-top">
+              <label>Age</label>
+              <span class="range-val" id="ageVal">35</span>
+            </div>
+            <input type="range" id="age" min="18" max="70" value="35"
+                   oninput="document.getElementById('ageVal').textContent=this.value"/>
+          </div>
+        </div>
+
+        <!-- Credit Score -->
+        <div class="field">
+          <div class="range-wrap">
+            <div class="range-top">
+              <label>Credit Score</label>
+              <span class="range-val" id="csVal">650</span>
+            </div>
+            <input type="range" id="creditScore" min="300" max="850" value="650"
+                   oninput="document.getElementById('csVal').textContent=this.value"/>
+          </div>
+        </div>
+
+        <!-- Balance -->
+        <div class="field full">
+          <div class="range-wrap">
+            <div class="range-top">
+              <label>Account Balance (₹)</label>
+              <span class="range-val" id="balVal">₹50,000</span>
+            </div>
+            <input type="range" id="balance" min="0" max="100000" step="500" value="50000"
+                   oninput="document.getElementById('balVal').textContent='₹'+parseInt(this.value).toLocaleString('en-IN')"/>
+          </div>
+        </div>
+
+        <!-- Salary -->
+        <div class="field full">
+          <div class="range-wrap">
+            <div class="range-top">
+              <label>Estimated Salary (₹)</label>
+              <span class="range-val" id="salVal">₹75,000</span>
+            </div>
+            <input type="range" id="salary" min="20000" max="150000" step="1000" value="75000"
+                   oninput="document.getElementById('salVal').textContent='₹'+parseInt(this.value).toLocaleString('en-IN')"/>
+          </div>
+        </div>
+
+        <!-- Tenure -->
+        <div class="field">
+          <label>Tenure (Years)</label>
+          <select id="tenure">
+            <option value="0">0 years</option>
+            <option value="1">1 year</option>
+            <option value="2">2 years</option>
+            <option value="3">3 years</option>
+            <option value="4">4 years</option>
+            <option value="5" selected>5 years</option>
+            <option value="6">6 years</option>
+            <option value="7">7 years</option>
+            <option value="8">8 years</option>
+            <option value="9">9 years</option>
+            <option value="10">10 years</option>
+          </select>
+        </div>
+
+        <!-- Products -->
+        <div class="field">
+          <label>No. of Products</label>
+          <select id="numProducts">
+            <option value="1">1 Product</option>
+            <option value="2" selected>2 Products</option>
+            <option value="3">3 Products</option>
+            <option value="4">4 Products</option>
+          </select>
+        </div>
+
+        <!-- Active Member -->
+        <div class="field full">
+          <label>Active Member?</label>
+          <select id="isActive">
+            <option value="1">Yes — Active Customer</option>
+            <option value="0">No — Inactive Customer</option>
+          </select>
+        </div>
+
+      </div>
+      <button type="submit" class="btn" id="submitBtn">🔮 Predict Churn</button>
+    </form>
+  </div>
+
+  <!-- Result Panel -->
+  <div>
+    <div class="card" id="placeholder">
+      <div class="card-title">
+        <div class="icon">📊</div>
+        Prediction Result
+      </div>
+      <div style="text-align:center; padding: 3rem 1rem; color: var(--muted);">
+        <div style="font-size:3rem; margin-bottom:1rem;">🎯</div>
+        <div style="font-size:.95rem; line-height:1.7;">Fill in the customer details<br/>and click <strong style="color:var(--accent)">Predict Churn</strong><br/>to see the result here.</div>
+      </div>
+    </div>
+
+    <div class="card" id="result">
+      <div class="card-title">
+        <div class="icon">📊</div>
+        Prediction Result
+      </div>
+
+      <div class="loader" id="loader">
+        <div class="spinner"></div>
+        Analyzing customer...
+      </div>
+
+      <div id="resultContent">
+        <!-- Ring -->
+        <div class="result-ring">
+          <svg viewBox="0 0 140 140" width="140" height="140">
+            <circle class="ring-track" cx="70" cy="70" r="60"/>
+            <circle class="ring-fill" id="ringFill" cx="70" cy="70" r="60"
+                    stroke-dasharray="377" stroke-dashoffset="377"/>
+          </svg>
+          <div class="ring-label">
+            <div class="ring-pct" id="ringPct">0%</div>
+            <div class="ring-sub">Churn Risk</div>
+          </div>
+        </div>
+
+        <!-- Risk Badge -->
+        <div class="risk-wrap">
+          <div class="risk-badge" id="riskBadge">—</div>
+        </div>
+
+        <!-- Verdict -->
+        <div class="verdict" id="verdict">—</div>
+
+        <!-- Feature importance -->
+        <div class="feat-title">Feature Impact</div>
+        <div id="featBars"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Built with Flask + Random Forest + SHAP &nbsp;·&nbsp; ChurnIQ ML Project
+</footer>
+
+<script>
+const form = document.getElementById("churnForm");
+const resultCard = document.getElementById("result");
+const placeholder = document.getElementById("placeholder");
+const loader = document.getElementById("loader");
+const resultContent = document.getElementById("resultContent");
+
+const FEAT_LABELS = {
+  "Age": "Age", "Balance": "Account Balance",
+  "NumProducts": "No. of Products", "IsActiveMember": "Active Member",
+  "CreditScore": "Credit Score", "Tenure": "Tenure", "EstimatedSalary": "Salary"
+};
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.textContent = "Predicting...";
+
+  placeholder.style.display = "none";
+  resultCard.style.display = "block";
+  loader.style.display = "block";
+  resultContent.style.display = "none";
+
+  const payload = {
+    age          : document.getElementById("age").value,
+    balance      : document.getElementById("balance").value,
+    numProducts  : document.getElementById("numProducts").value,
+    isActive     : document.getElementById("isActive").value,
+    creditScore  : document.getElementById("creditScore").value,
+    tenure       : document.getElementById("tenure").value,
+    salary       : document.getElementById("salary").value,
+  };
+
+  try {
+    const res  = await fetch("/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    loader.style.display = "none";
+    resultContent.style.display = "block";
+
+    // Ring animation
+    const pct    = data.probability;
+    const offset = 377 - (377 * pct / 100);
+    const ring   = document.getElementById("ringFill");
+    ring.style.strokeDashoffset = offset;
+    ring.style.stroke = pct >= 75 ? "#ef4444" : pct >= 45 ? "#f59e0b" : "#10b981";
+    document.getElementById("ringPct").textContent = pct + "%";
+    document.getElementById("ringPct").style.color =
+      pct >= 75 ? "#ef4444" : pct >= 45 ? "#f59e0b" : "#10b981";
+
+    // Risk badge
+    const rb = document.getElementById("riskBadge");
+    rb.textContent = data.risk + " Risk";
+    rb.className = "risk-badge risk-" + data.risk;
+
+    // Verdict
+    const vd = document.getElementById("verdict");
+    if (data.prediction === 1) {
+      vd.className = "verdict churn";
+      vd.innerHTML = "⚠️ This customer is likely to <strong>CHURN</strong>";
+    } else {
+      vd.className = "verdict stay";
+      vd.innerHTML = "✅ This customer is likely to <strong>STAY</strong>";
+    }
+
+    // Feature bars
+    const imp  = data.importance;
+    const max  = Math.max(...Object.values(imp));
+    const sorted = Object.entries(imp).sort((a,b) => b[1]-a[1]);
+    const container = document.getElementById("featBars");
+    container.innerHTML = "";
+    sorted.forEach(([key, val]) => {
+      const pctW = ((val / max) * 100).toFixed(1);
+      container.innerHTML += `
+        <div class="feat-bar">
+          <div class="feat-row">
+            <span class="feat-name">${FEAT_LABELS[key]||key}</span>
+            <span class="feat-pct">${(val*100).toFixed(1)}%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${pctW}%"></div>
+          </div>
+        </div>`;
+    });
+
+  } catch(err) {
+    loader.style.display = "none";
+    resultContent.style.display = "block";
+    resultContent.innerHTML = `<p style="color:var(--red);text-align:center">Error: ${err.message}</p>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = "🔮 Predict Churn";
+});
+</script>
+</body>
+</html>
